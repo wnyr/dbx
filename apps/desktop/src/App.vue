@@ -992,7 +992,7 @@ function initApp() {
     })
     .then(() => {
       console.log(`[STARTUP]   connectionStore.initFromDisk: ${(performance.now() - t0).toFixed(0)}ms`);
-      reconnectRestoredTabs();
+      restoreActiveConnectionContext();
     })
     .catch((e: any) => {
       toast(t("connection.loadFailed", { message: e?.message || String(e) }), 5000);
@@ -1000,13 +1000,10 @@ function initApp() {
   settingsStore.initAiConfig();
 }
 
-async function reconnectRestoredTabs() {
+function restoreActiveConnectionContext() {
   const activeConnectionId = activeTab.value?.connectionId || connectionStore.activeConnectionId;
   if (activeConnectionId && connectionStore.getConfig(activeConnectionId)) {
     connectionStore.activeConnectionId = activeConnectionId;
-    try {
-      await connectionStore.ensureConnected(activeConnectionId);
-    } catch {}
   }
 }
 
