@@ -65,8 +65,8 @@ test("GBase profiles use their compatible object tree shapes", () => {
   const gbase8s = { db_type: "gbase" as const, driver_profile: "gbase8s" };
 
   assert.equal(connectionUsesDatabaseObjectTreeMode(gbase8a), false);
-  assert.equal(connectionObjectTreeQuerySchema(gbase8a, "testdb", undefined), "");
-  assert.equal(connectionObjectTreeNodeSchema(gbase8a, "testdb", undefined), undefined);
+  assert.equal(connectionObjectTreeQuerySchema(gbase8a, "testdb", undefined), "testdb");
+  assert.equal(connectionObjectTreeNodeSchema(gbase8a, "testdb", undefined), "testdb");
   assert.equal(connectionUsesDatabaseObjectTreeMode(gbase8s), false);
   assert.equal(connectionObjectTreeQuerySchema(gbase8s, "testdb", "gbasedbt"), "gbasedbt");
   assert.equal(connectionObjectTreeNodeSchema(gbase8s, "testdb", "gbasedbt"), "gbasedbt");
