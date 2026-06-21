@@ -96,6 +96,7 @@ export default {
     fileName: "Nome do arquivo",
     folder: "Pasta",
     rootFolder: "Biblioteca SQL",
+    newQuery: "Nova Consulta",
     newFolder: "Nova Pasta SQL",
     newFolderDefault: "Nova Pasta",
     renameFolder: "Renomear Pasta",

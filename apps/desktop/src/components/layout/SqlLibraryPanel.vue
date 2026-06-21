@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, reactive, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { Download, FileInput, FileText, FolderCog, FolderClosed, FolderOpen, FolderPlus, Library, LocateFixed, Pencil, Search, Trash2, Upload, X } from "@lucide/vue";
+import { Download, FileInput, FilePlus, FileText, FolderCog, FolderClosed, FolderOpen, FolderPlus, Library, LocateFixed, Pencil, Search, Trash2, Upload, X } from "@lucide/vue";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import CustomContextMenu, { type ContextMenuItem as CtxMenuItem } from "@/components/ui/CustomContextMenu.vue";
@@ -394,6 +394,29 @@ async function openNewFolderInput(parentFolderId?: string) {
   startRenameFolder(folder);
 }
 
+async function openNewQueryInFolder(folder?: SavedSqlFolder) {
+  const connectionId = folder?.connectionId || connectionStore.activeConnectionId || connectionStore.connections[0]?.id;
+  if (!connectionId) return;
+
+  const takenNames = folder
+    ? new Set(savedSqlStore.filesInFolder(folder.id).map((f) => f.name))
+    : new Set(
+        savedSqlStore
+          .filesWithoutFolder()
+          .filter((file) => !orphanedIds.value.has(file.id))
+          .map((f) => f.name),
+      );
+  const name = uniqueImportedName("new_query.sql", takenNames);
+  const file = await savedSqlStore.saveFile({
+    connectionId,
+    folderId: folder?.id,
+    name,
+    database: "",
+    sql: "",
+  });
+  queryStore.openSavedSql(file);
+}
+
 const renamingTarget = ref<{ type: "folder" | "file"; id: string } | null>(null);
 const renameValue = ref("");
 const renameInputRef = ref<HTMLInputElement | null>(null);
@@ -473,6 +496,7 @@ const contextMenuItems = computed<CtxMenuItem[]>(() => {
   if (target === "panel") {
     return [
       { label: t("savedSql.newFolder"), action: openNewFolderInput, icon: FolderPlus },
+      { label: t("savedSql.newQuery"), action: () => openNewQueryInFolder(), icon: FilePlus },
       { label: t("sqlLibrary.importDirectory"), action: () => importDirectoryIntoLibrary(), icon: Upload },
       { label: t("sqlLibrary.exportLibrary"), action: () => exportFolderContents(), icon: Download },
       { label: "", separator: true },
@@ -503,6 +527,7 @@ const contextMenuItems = computed<CtxMenuItem[]>(() => {
   }
   return [
     { label: t("savedSql.newFolder"), action: () => openNewFolderInput(target.id), icon: FolderPlus },
+    { label: t("savedSql.newQuery"), action: () => openNewQueryInFolder(target), icon: FilePlus },
     { label: t("sqlLibrary.importIntoFolder"), action: () => importDirectoryIntoLibrary(target), icon: Upload },
     { label: t("sqlLibrary.exportFolder"), action: () => exportFolderContents(target), icon: Download },
     { label: "", separator: true },

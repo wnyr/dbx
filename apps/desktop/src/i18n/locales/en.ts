@@ -98,6 +98,7 @@ export default {
     fileName: "File name",
     folder: "Folder",
     rootFolder: "SQL Library",
+    newQuery: "New Query",
     newFolder: "New SQL Folder",
     newFolderDefault: "New Folder",
     renameFolder: "Rename Folder",

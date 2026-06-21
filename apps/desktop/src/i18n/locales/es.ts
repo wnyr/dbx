@@ -96,6 +96,7 @@ export default {
     fileName: "Nombre de archivo",
     folder: "Carpeta",
     rootFolder: "Biblioteca SQL",
+    newQuery: "Nueva consulta",
     newFolder: "Nueva carpeta SQL",
     newFolderDefault: "Nueva carpeta",
     renameFolder: "Renombrar carpeta",

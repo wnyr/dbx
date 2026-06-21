@@ -98,6 +98,7 @@ export default {
     fileName: "ファイル名",
     folder: "フォルダ",
     rootFolder: "SQLライブラリ",
+    newQuery: "新規クエリ",
     newFolder: "新しいSQLフォルダ",
     newFolderDefault: "新しいフォルダ",
     renameFolder: "フォルダ名を変更",

@@ -96,6 +96,7 @@ export default {
     fileName: "Nome file",
     folder: "Cartella",
     rootFolder: "Libreria SQL",
+    newQuery: "Nuova query",
     newFolder: "Nuova Cartella SQL",
     newFolderDefault: "Nuova Cartella",
     renameFolder: "Rinomina Cartella",

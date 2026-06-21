@@ -96,6 +96,7 @@ export default {
     fileName: "檔案名稱",
     folder: "資料夾",
     rootFolder: "SQL 庫",
+    newQuery: "新建查詢",
     newFolder: "建立 SQL 資料夾",
     newFolderDefault: "建立資料夾",
     renameFolder: "重新命名資料夾",
