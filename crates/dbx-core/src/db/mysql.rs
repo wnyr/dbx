@@ -1301,15 +1301,8 @@ pub async fn list_completion_objects(pool: &MySqlPool, database: &str) -> Result
 fn columns_sql(database: &str, table: &str) -> String {
     format!(
         "SELECT c.COLUMN_NAME, c.COLUMN_TYPE, c.IS_NULLABLE, c.COLUMN_DEFAULT, c.EXTRA, \
-         c.COLUMN_COMMENT, \
-         c.COLUMN_KEY, c.NUMERIC_PRECISION, c.NUMERIC_SCALE, c.CHARACTER_MAXIMUM_LENGTH, \
-         CASE WHEN pk.COLUMN_NAME IS NOT NULL THEN 1 ELSE 0 END AS is_pk \
+         c.COLUMN_COMMENT, c.COLUMN_KEY, c.NUMERIC_PRECISION, c.NUMERIC_SCALE, c.CHARACTER_MAXIMUM_LENGTH \
          FROM information_schema.COLUMNS c \
-         LEFT JOIN information_schema.KEY_COLUMN_USAGE pk \
-           ON pk.TABLE_SCHEMA = c.TABLE_SCHEMA \
-           AND pk.TABLE_NAME = c.TABLE_NAME \
-           AND pk.COLUMN_NAME = c.COLUMN_NAME \
-           AND pk.CONSTRAINT_NAME = 'PRIMARY' \
          WHERE c.TABLE_SCHEMA = {} AND c.TABLE_NAME = {} \
          ORDER BY c.ORDINAL_POSITION",
         quote_value(database),
@@ -1403,9 +1396,8 @@ pub async fn get_columns(pool: &MySqlPool, database: &str, table: &str) -> Resul
                 return None;
             }
             let column_key = get_str_by_name(row, "COLUMN_KEY");
-            let from_pk_join = row.get::<i32, &str>("is_pk").unwrap_or(0) == 1;
             Some(ColumnInfo {
-                is_primary_key: from_pk_join || column_key.eq_ignore_ascii_case("PRI"),
+                is_primary_key: column_key.eq_ignore_ascii_case("PRI"),
                 name,
                 data_type: get_str_by_name(row, "COLUMN_TYPE"),
                 is_nullable: get_str_by_name(row, "IS_NULLABLE") == "YES",
@@ -2127,11 +2119,12 @@ mod tests {
     }
 
     #[test]
-    fn mysql_columns_sql_joins_key_column_usage_for_primary_keys() {
+    fn mysql_columns_sql_uses_column_key_for_primary_keys_without_join() {
         let sql = columns_sql("app", "users");
 
-        assert!(sql.contains("LEFT JOIN information_schema.KEY_COLUMN_USAGE"));
-        assert!(sql.contains("CONSTRAINT_NAME = 'PRIMARY'"));
+        assert!(sql.contains("information_schema.COLUMNS"));
+        assert!(!sql.contains("KEY_COLUMN_USAGE"));
+        assert!(!sql.contains("CONSTRAINT_NAME = 'PRIMARY'"));
         assert!(sql.contains("c.COLUMN_KEY"));
         assert!(!sql.contains("COLLATE"));
     }
@@ -2200,11 +2193,9 @@ mod tests {
     }
 
     #[test]
-    fn mysql_column_key_marks_primary_when_pk_join_returns_null() {
-        // COLUMN_KEY='PRI' provides a fallback when KEY_COLUMN_USAGE LEFT JOIN returns NULL
-        let from_pk_join = false;
+    fn mysql_column_key_marks_primary() {
         let column_key = "PRI";
-        let is_pk = from_pk_join || column_key.eq_ignore_ascii_case("PRI");
+        let is_pk = column_key.eq_ignore_ascii_case("PRI");
         assert!(is_pk);
     }
 
