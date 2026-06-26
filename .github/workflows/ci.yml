@@ -10,6 +10,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  RUSTFLAGS: -C debuginfo=line-tables-only
+
 jobs:
   frontend:
     runs-on: ubuntu-22.04
