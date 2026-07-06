@@ -289,6 +289,22 @@ pub async fn connect_mysql_metadata_pool(
                     )
                     .await
                     .map(|pool| (pool, MysqlMode::Bare))
+                } else if let Some(db) = db_config.effective_database() {
+                    let mut unscoped_config = db_config.clone();
+                    unscoped_config.database = None;
+                    let unscoped_url = connection_url_for_endpoint(&unscoped_config, host, port);
+                    let mut retry_setup_queries = extra_setup_queries.clone();
+                    retry_setup_queries.insert(0, format!("USE `{}`", db.replace('`', "``")));
+                    log::info!("MySQL connection with database in URL failed ({err}); retrying without database in URL and using USE statement.");
+                    connect_bare_mysql_pool_with_setup(
+                        &unscoped_config,
+                        &unscoped_url,
+                        connect_timeout,
+                        max_connections,
+                        &retry_setup_queries,
+                    )
+                    .await
+                    .map(|pool| (pool, MysqlMode::Bare))
                 } else {
                     Err(err)
                 }
@@ -323,6 +339,24 @@ pub async fn connect_mysql_metadata_pool(
                     max_connections,
                     idle_timeout_secs,
                     &extra_setup_queries,
+                )
+                .await?;
+                let mode = detect_ob_oracle_mode(config, &pool).await;
+                Ok((pool, mode))
+            } else if let Some(db) = db_config.effective_database() {
+                let mut unscoped_config = db_config.clone();
+                unscoped_config.database = None;
+                let unscoped_url = connection_url_for_endpoint(&unscoped_config, host, port);
+                let mut retry_setup_queries = extra_setup_queries.clone();
+                retry_setup_queries.insert(0, format!("USE `{}`", db.replace('`', "``")));
+                log::info!("MySQL connection with database in URL failed ({err}); retrying without database in URL and using USE statement.");
+                let pool = db::mysql::connect_with_ca_cert_pool_limit_idle_and_setup(
+                    &unscoped_url,
+                    Some(&config.ca_cert_path),
+                    connect_timeout,
+                    max_connections,
+                    idle_timeout_secs,
+                    &retry_setup_queries,
                 )
                 .await?;
                 let mode = detect_ob_oracle_mode(config, &pool).await;
